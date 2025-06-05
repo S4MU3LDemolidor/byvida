@@ -59,7 +59,6 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import type { ChartConfig } from "@/components/ui/chart"
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -111,6 +110,42 @@ interface AppSettings {
   dailySummary: boolean
   emailAddress: string
   whatsappNumber: string
+}
+
+interface MedicationFormData {
+  name: string
+  lot: string
+  expiry: string
+  manufacturer: string
+  category: string
+  stock: string
+}
+
+interface EntryFormData {
+  medication: string
+  lot: string
+  date: string
+  supplier: string
+  quantity: string
+}
+
+interface ExitFormData {
+  medication: string
+  quantity: string
+  reason: string
+  responsible: string
+  notes: string
+}
+
+interface ChartDataPoint {
+  name: string
+  stock: number
+}
+
+interface MovementDataPoint {
+  month: string
+  entries: number
+  exits: number
 }
 
 // Sample data
@@ -216,47 +251,21 @@ const sampleExits: Exit[] = [
   },
 ]
 
-// Chart configurations
-const stockChartConfig = {
-  stock: {
-    label: "Estoque",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig
-
-const categoryChartConfig = {
-  count: {
-    label: "Quantidade",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
-
-const movementChartConfig = {
-  entries: {
-    label: "Entradas",
-    color: "hsl(142, 76%, 36%)",
-  },
-  exits: {
-    label: "Saídas",
-    color: "hsl(346, 87%, 43%)",
-  },
-} satisfies ChartConfig
-
-// Move these components outside the main component, before the export default function
-const MedicationForm = React.memo(
-  ({
-    isEdit = false,
-    medicationForm,
-    setMedicationForm,
-    onSubmit,
-    onCancel,
-  }: {
-    isEdit?: boolean
-    medicationForm: any
-    setMedicationForm: (form: any) => void
-    onSubmit: (e?: React.FormEvent) => void
-    onCancel: () => void
-  }) => (
+// Form Components
+const MedicationForm = React.memo(function MedicationForm({
+  isEdit = false,
+  medicationForm,
+  setMedicationForm,
+  onSubmit,
+  onCancel,
+}: {
+  isEdit?: boolean
+  medicationForm: MedicationFormData
+  setMedicationForm: (form: MedicationFormData) => void
+  onSubmit: (e?: React.FormEvent) => void
+  onCancel: () => void
+}) {
+  return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>{isEdit ? "Editar Medicamento" : "Adicionar Novo Medicamento"}</DialogTitle>
@@ -341,25 +350,25 @@ const MedicationForm = React.memo(
         </DialogFooter>
       </form>
     </DialogContent>
-  ),
-)
+  )
+})
 
-const EntryForm = React.memo(
-  ({
-    isEdit = false,
-    entryForm,
-    setEntryForm,
-    medications,
-    onSubmit,
-    onCancel,
-  }: {
-    isEdit?: boolean
-    entryForm: any
-    setEntryForm: (form: any) => void
-    medications: Medication[]
-    onSubmit: (e?: React.FormEvent) => void
-    onCancel: () => void
-  }) => (
+const EntryForm = React.memo(function EntryForm({
+  isEdit = false,
+  entryForm,
+  setEntryForm,
+  medications,
+  onSubmit,
+  onCancel,
+}: {
+  isEdit?: boolean
+  entryForm: EntryFormData
+  setEntryForm: (form: EntryFormData) => void
+  medications: Medication[]
+  onSubmit: (e?: React.FormEvent) => void
+  onCancel: () => void
+}) {
+  return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>{isEdit ? "Editar Entrada" : "Registrar Nova Entrada"}</DialogTitle>
@@ -435,25 +444,25 @@ const EntryForm = React.memo(
         </DialogFooter>
       </form>
     </DialogContent>
-  ),
-)
+  )
+})
 
-const ExitForm = React.memo(
-  ({
-    isEdit = false,
-    exitForm,
-    setExitForm,
-    medications,
-    onSubmit,
-    onCancel,
-  }: {
-    isEdit?: boolean
-    exitForm: any
-    setExitForm: (form: any) => void
-    medications: Medication[]
-    onSubmit: (e?: React.FormEvent) => void
-    onCancel: () => void
-  }) => (
+const ExitForm = React.memo(function ExitForm({
+  isEdit = false,
+  exitForm,
+  setExitForm,
+  medications,
+  onSubmit,
+  onCancel,
+}: {
+  isEdit?: boolean
+  exitForm: ExitFormData
+  setExitForm: (form: ExitFormData) => void
+  medications: Medication[]
+  onSubmit: (e?: React.FormEvent) => void
+  onCancel: () => void
+}) {
+  return (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>{isEdit ? "Editar Saída" : "Registrar Nova Saída"}</DialogTitle>
@@ -535,8 +544,8 @@ const ExitForm = React.memo(
         </DialogFooter>
       </form>
     </DialogContent>
-  ),
-)
+  )
+})
 
 // Desktop Sidebar Component
 const Sidebar = ({ currentPage, setCurrentPage }: { currentPage: string; setCurrentPage: (page: string) => void }) => (
@@ -687,8 +696,8 @@ const Dashboard = ({
   medications: Medication[]
   getExpiryStatus: (expiry: string) => { status: string; color: string }
   getStockStatus: (stock: number) => { status: string; color: string }
-  stockChartData: any[]
-  movementChartData: any[]
+  stockChartData: ChartDataPoint[]
+  movementChartData: MovementDataPoint[]
   entries: Entry[]
   exits: Exit[]
   setIsAddMedicationOpen: (open: boolean) => void
@@ -854,7 +863,6 @@ const Dashboard = ({
 )
 
 const MedicationList = ({
-  medications,
   setIsAddMedicationOpen,
   searchTerm,
   setSearchTerm,
@@ -867,7 +875,6 @@ const MedicationList = ({
   openEditMedication,
   openDeleteDialog,
 }: {
-  medications: Medication[]
   setIsAddMedicationOpen: (open: boolean) => void
   searchTerm: string
   setSearchTerm: (term: string) => void
@@ -962,7 +969,12 @@ const MedicationList = ({
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm">{medication.expiry}</span>
-                    <Badge variant={getExpiryStatus(medication.expiry).color as any} className="text-xs">
+                    <Badge
+                      variant={
+                        getExpiryStatus(medication.expiry).color as "default" | "destructive" | "outline" | "secondary"
+                      }
+                      className="text-xs"
+                    >
                       {getExpiryStatus(medication.expiry).status}
                     </Badge>
                   </div>
@@ -974,7 +986,12 @@ const MedicationList = ({
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <span className="font-medium">{medication.stock}</span>
-                    <Badge variant={getStockStatus(medication.stock).color as any} className="text-xs">
+                    <Badge
+                      variant={
+                        getStockStatus(medication.stock).color as "default" | "destructive" | "outline" | "secondary"
+                      }
+                      className="text-xs"
+                    >
                       {getStockStatus(medication.stock).status}
                     </Badge>
                   </div>
@@ -1266,7 +1283,6 @@ const AlertsPage = ({
 )
 
 const StockMonitoring = ({
-  medications,
   selectedCategory,
   setSelectedCategory,
   categories,
@@ -1274,7 +1290,6 @@ const StockMonitoring = ({
   getStockStatus,
   getExpiryStatus,
 }: {
-  medications: Medication[]
   selectedCategory: string
   setSelectedCategory: (category: string) => void
   categories: string[]
@@ -1361,7 +1376,10 @@ const StockMonitoring = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <Badge variant={stockStatus.color as any} className="text-xs">
+                      <Badge
+                        variant={stockStatus.color as "default" | "destructive" | "outline" | "secondary"}
+                        className="text-xs"
+                      >
                         {stockStatus.status}
                       </Badge>
                       {(expiryStatus.status === "vencendo" || isExpired) && (
@@ -1698,7 +1716,7 @@ export default function Home() {
   }, [exits, mounted])
 
   // Form data states
-  const [medicationForm, setMedicationForm] = useState({
+  const [medicationForm, setMedicationForm] = useState<MedicationFormData>({
     name: "",
     lot: "",
     expiry: "",
@@ -1707,7 +1725,7 @@ export default function Home() {
     stock: "",
   })
 
-  const [entryForm, setEntryForm] = useState({
+  const [entryForm, setEntryForm] = useState<EntryFormData>({
     medication: "",
     lot: "",
     date: "",
@@ -1715,7 +1733,7 @@ export default function Home() {
     quantity: "",
   })
 
-  const [exitForm, setExitForm] = useState({
+  const [exitForm, setExitForm] = useState<ExitFormData>({
     medication: "",
     quantity: "",
     reason: "",
@@ -1770,7 +1788,7 @@ export default function Home() {
   }
 
   // Fix the stock chart data to display properly
-  const stockChartData = medications
+  const stockChartData: ChartDataPoint[] = medications
     .slice(0, 5) // Limit to 5 items to prevent overcrowding
     .map((med) => ({
       name: med.name.split(" ")[0], // First word only for cleaner display
@@ -1778,7 +1796,7 @@ export default function Home() {
     }))
 
   // Fix the movement chart data to use proper month names
-  const movementChartData = [
+  const movementChartData: MovementDataPoint[] = [
     { month: "Jan", entries: 45, exits: 32 },
     { month: "Fev", entries: 52, exits: 28 },
     { month: "Mar", entries: 38, exits: 41 },
@@ -2116,7 +2134,6 @@ export default function Home() {
       case "medications":
         return (
           <MedicationList
-            medications={medications}
             setIsAddMedicationOpen={setIsAddMedicationOpen}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -2155,7 +2172,6 @@ export default function Home() {
       case "monitoring":
         return (
           <StockMonitoring
-            medications={medications}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             categories={categories}
